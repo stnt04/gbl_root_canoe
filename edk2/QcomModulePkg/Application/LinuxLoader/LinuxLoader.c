@@ -266,6 +266,7 @@ WaitForVolumeDownKey (IN UINT32 TimeoutMs)
 
   return KeyDetected;
 }
+#ifndef TEST_ADAPTER
 #include "ABL.h"
 STATIC EFI_STATUS
 BootEfiImage (VOID *Data, UINT32 Size)
@@ -296,6 +297,7 @@ BootEfiImage (VOID *Data, UINT32 Size)
 STATIC VOID LoadIntegratedEfi(VOID){
     BootEfiImage(dist_ABL_efi,dist_ABL_efi_len);
 }
+#endif
 EFI_STATUS
 ReadAllowUnlockValue (UINT32 *IsAllowUnlock);
 EFI_STATUS EFIAPI  __attribute__ ( (no_sanitize ("safe-stack")))
@@ -351,10 +353,17 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
 
   UpdatePartitionEntries ();
   /*Check for multislot boot support*/
+#ifndef TEST_ADAPTER
     Status = ReadAllowUnlockValue (&IsAllowUnlock);
+#else
+    IsAllowUnlock = TRUE; // For test adapter, directly set allow unlock to true to enter fastboot
+    Status = EFI_SUCCESS;
+#endif
   if (Status != EFI_SUCCESS|| !IsAllowUnlock) {
     DEBUG ((EFI_D_ERROR, "Unable to read allow unlock value: %r\n", Status));
+#ifndef TEST_ADAPTER
     LoadIntegratedEfi();
+ #endif
     return EFI_SUCCESS;
   }
 
@@ -366,7 +375,9 @@ LinuxLoaderEntry (IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
     Print(L"Volume Down key detected, entering Fastboot mode...\n");
   } else {
     DEBUG ((EFI_D_INFO, "No key detected, proceeding with normal boot...\n"));
+#ifndef TEST_ADAPTER
     LoadIntegratedEfi();
+#endif
     return EFI_SUCCESS;
    }
   FindPtnActiveSlot ();

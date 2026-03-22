@@ -112,6 +112,9 @@
   !if $(VERIFIED_BOOT_LE)
       GCC:*_*_*_CC_FLAGS = -DVERIFIED_BOOT_LE
   !endif
+  !if $(TEST_ADAPTER)
+      GCC:*_*_*_CC_FLAGS = -DTEST_ADAPTER
+  !endif
   !if $(ROOT_PARTLABEL_SUPPORT)
       GCC:*_*_*_CC_FLAGS = -DROOT_PARTLABEL_SUPPORT
   !endif
